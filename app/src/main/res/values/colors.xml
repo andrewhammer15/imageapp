@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="gridview_bg_black">#000000</color>
+    <color name="layout_bg_black">#121222</color>
+    <color name="text_silver">#8C8F8D</color>
+    <color name="text_pressed">#2c2f4d</color>
+    <color name="highlighted_text_blue">#ADEAEA</color>
+</resources>
