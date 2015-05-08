@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by andrewhammer on 5/6/15.
  */
-public class NetworkRequestUtils {
+public class NetworkRequest {
     private static final String REFERER_HEADER = "referer";
     private static final String REFERER_SRC = "http://www.uber.com"; //placeholder referer URL for referer header in api request
 

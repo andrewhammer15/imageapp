@@ -168,7 +168,7 @@ public class MainActivity extends ActionBarActivity {
         @Override
         protected String doInBackground(String... params) {
             try {
-                Response response = NetworkRequestUtils.doConnectionRequest(params[0], client);
+                Response response = NetworkRequest.doConnectionRequest(params[0], client);
                 if (response.isSuccessful()) {
                     return response.body().string();
                 }
@@ -185,7 +185,7 @@ public class MainActivity extends ActionBarActivity {
 
             try {
                 if (result != null)
-                    NetworkRequestUtils.parseResult(result, imageUrls);
+                    NetworkRequest.parseResult(result, imageUrls);
             } catch (Exception e) {
                 Log.d("ImagesAsyncTask", "Error getting response");
                 Log.d("ImagesAsyncTask", e.toString());
