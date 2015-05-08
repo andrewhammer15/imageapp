@@ -2,15 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="andrewhammer.hammeruberapplication" >
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <meta-data
             android:name="android.app.default_searchable"
             android:value=".MainActivity"
             />
+        <provider
+            android:authorities="andrewhammer.hammeruberapplication.AHSuggestionsProvider"
+            android:name=".AHSuggestionsProvider"/>
+        
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"

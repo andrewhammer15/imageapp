@@ -4,8 +4,10 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SearchRecentSuggestionsProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.SearchRecentSuggestions;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
@@ -17,14 +19,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
@@ -38,7 +36,7 @@ public class MainActivity extends ActionBarActivity {
     private TextView imagesTab;
     private GridView gridView;
     private TextView noticeTextView;
-    private Button moreButton;
+    private ProgressBar progressBar;
 
     private List<String> imageUrls = new ArrayList<>();
     private ImageAdapter imageAdapter;
@@ -47,6 +45,8 @@ public class MainActivity extends ActionBarActivity {
     private OkHttpClient client;
     private String recentQuery = null;
 
+    private boolean flag_loading = false;
+    private SearchRecentSuggestions suggestions;
 
     //save data on teardown
     @Override
@@ -74,7 +74,7 @@ public class MainActivity extends ActionBarActivity {
 
                 selectImagesTab();
             }
-            else selectHistoryTab();
+//            else selectHistoryTab();
 
         }
         super.onRestoreInstanceState(savedInstanceState);
@@ -89,14 +89,16 @@ public class MainActivity extends ActionBarActivity {
 
         gridView = (GridView) findViewById(R.id.gridView);
 
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+
         historyTab = (TextView) findViewById(R.id.history_tab);
-        historyTab.setOnClickListener(tabListener);
+//        historyTab.setOnClickListener(tabListener);
 
         ArrayList<String> list = new ArrayList<>();
-        list.addAll(Arrays.asList(SearchHistorySingleton.getInstance().getQueries()));
+//        list.addAll(Arrays.asList(SearchHistorySingleton.getInstance().getQueries()));
 
-        historyAdapter =  new ArrayAdapter<String>(this, R.layout.history_element,
-                R.id.history_list_textview, list);
+//        historyAdapter =  new ArrayAdapter<>(this, R.layout.history_element,
+//                R.id.history_list_textview, list);
 
 
         imagesTab = (TextView) findViewById(R.id.image_grid_tab);
@@ -105,24 +107,11 @@ public class MainActivity extends ActionBarActivity {
         imageAdapter = new ImageAdapter(this, R.layout.image_grid_element, imageUrls);
 
 
-
-        moreButton = (Button) findViewById(R.id.button);
-        moreButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (imageUrls.size() == 0 || historyTab.isSelected())
-                    return;
-
-                if (recentQuery != null) {
-                    String url = RequestUrlFactory.createRequestUrl(recentQuery, imageUrls.size());
-                    new ImagesAsyncTask().execute(url);
-                }
-            }
-        });
-
         selectImagesTab();
 
         client = new OkHttpClient();
+
+        suggestions = new SearchRecentSuggestions(this, AHSuggestionsProvider.AUTHORITY, AHSuggestionsProvider.MODE);
 
 //        handleIntent(getIntent());
     }
@@ -136,24 +125,16 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void handleIntent(Intent intent) {
-        String query = null;
-        Log.d("MainActivity", "handling intent");
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            query = intent.getStringExtra(SearchManager.QUERY);
+            String query = intent.getStringExtra(SearchManager.QUERY);
+
             addQueryWrapper(query);
-        } else {
-            int i = intent.getIntExtra(SearchHistorySingleton.QUERY_INDEX, -1);
-            if (i > -1) {
-                query = SearchHistorySingleton.getInstance().getQuery(i);
-            }
+            String url = RequestUrlFactory.createRequestUrl(query);
+
+            imageUrls.clear(); //clear out url list for the new search
+
+            new ImagesAsyncTask().execute(url);
         }
-
-        if (query == null) return;
-
-        imageUrls.clear(); //clear out url list for new search
-
-        String url = RequestUrlFactory.createRequestUrl(query);
-        new ImagesAsyncTask().execute(url);
     }
 
 
@@ -189,10 +170,11 @@ public class MainActivity extends ActionBarActivity {
             if (v.isSelected())
                 return;
 
-            switchTab();
+//            switchTab();
         }
     };
 
+    /*
     private void switchTab() {
         if (imagesTab.isSelected()) {
             selectHistoryTab();
@@ -201,6 +183,7 @@ public class MainActivity extends ActionBarActivity {
         }
 
     }
+    */
 
     //selects imagesTab and updates views accordingly
     private void selectImagesTab() {
@@ -211,12 +194,14 @@ public class MainActivity extends ActionBarActivity {
         gridView.setNumColumns(GridView.AUTO_FIT);
         gridView.setAdapter(imageAdapter);
         gridView.setOnItemClickListener(null);
+        gridView.setOnScrollListener(overScrollListener);
 
         handleNoticeVisibility();
-        handleButtonVisibility();
+        handleBarVisibility();
     }
 
     //selects historyTab and updates views accordingly
+    /*
     private void selectHistoryTab() {
         imagesTab.setSelected(false);
         historyTab.setSelected(true);
@@ -234,10 +219,12 @@ public class MainActivity extends ActionBarActivity {
         }
 
         gridView.setOnItemClickListener(historyListener);
+        gridView.setOnScrollListener(null);
 
         handleNoticeVisibility();
-        handleButtonVisibility();
+        handleBarVisibility();
     }
+        */
 
     //checks to see if relevant adapter has elements and hides noticeTextView accordingly
     private void handleNoticeVisibility() {
@@ -248,31 +235,32 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private void handleButtonVisibility() {
-        if (gridView.getCount() > 0 && imagesTab.isSelected()) {
-            moreButton.setVisibility(View.VISIBLE);
+    private void handleBarVisibility() {
+        if (flag_loading && imagesTab.isSelected()) {
+            progressBar.setVisibility(View.VISIBLE);
         } else {
-            moreButton.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.GONE);
         }
     }
 
     //uses okhttp to connect to server
     //updates UI in onPostExecute
     private class ImagesAsyncTask extends AsyncTask<String, Void, String> {
-        private ProgressDialog progressDialog;
+
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressDialog = ProgressDialog.show(MainActivity.this, "", "", true);
+            flag_loading = true;
+            progressBar.setVisibility(View.VISIBLE);
         }
 
         @Override
         protected String doInBackground(String... params) {
             try {
-                Response response = doConnectionRequest(params[0]);
+                Response response = NetworkRequestUtils.doConnectionRequest(params[0], client);
                 if (response.isSuccessful()) {
-                    Log.d("MainActivity debug", "valid json");
+//                    Log.d("MainActivity debug", "valid json");
                     return response.body().string();
                 }
             } catch (IOException e) {
@@ -287,51 +275,18 @@ public class MainActivity extends ActionBarActivity {
             super.onPostExecute(result);
 
             try {
-                parseResult(result);
+                NetworkRequestUtils.parseResult(result, imageUrls);
             } catch (Exception e) {
                 Log.d("ImagesAsyncTask", "Error getting response");
                 Log.d("ImagesAsyncTask", e.toString());
             } finally {
                 imageAdapter.notifyDataSetChanged();
-                selectImagesTab();
-                progressDialog.dismiss();
+                flag_loading = false;
+
+                handleNoticeVisibility();
+
+                progressBar.setVisibility(View.GONE);
             }
-        }
-    }
-
-    private Response doConnectionRequest(String url) throws IOException {
-        Request request = new Request.Builder()
-                .url(url)
-                .header("referer", getString(R.string.placeholder_uber_url))  //placeholder referer URL! hopefully you're ok with this
-                .build();
-
-        return client.newCall(request).execute();
-    }
-
-    //parses the json result of the api call using gson
-    private void parseResult(String result) {
-        Log.d("MainActivity debug", "json " + result);
-        JsonElement jsonResult = new JsonParser().parse(result);
-        Log.d("MainActivity debug", "json " + jsonResult.toString());
-
-        JsonObject jsObjResult = jsonResult.getAsJsonObject();
-        JsonObject responseData = jsObjResult.getAsJsonObject("responseData");
-
-        //Might not be super robust w/ bad responses, but should be handled by a try/catch
-
-        //Iterate over responses to add urls to list
-        JsonArray responses = responseData.getAsJsonArray("results");
-
-        if (responses.size() == 0) {
-            Log.d("MainActivity debug", "no results in response");
-            return;
-        }
-
-        for (int i = 0; i < responses.size(); i ++) {
-            JsonObject response = responses.get(i).getAsJsonObject();
-            String url = response.get("url").getAsString();
-            imageUrls.add(url);
-            Log.d("MainActivity debug", "url " + i + url);
         }
     }
 
@@ -340,18 +295,44 @@ public class MainActivity extends ActionBarActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             String query = SearchHistorySingleton.getInstance().getQuery(position);
 
-            addQueryWrapper(query); //in order to maintain the order
+            if (!query.equals(recentQuery)) {
+                addQueryWrapper(query); //in order to maintain the order
+                imageUrls.clear();
+                String url = RequestUrlFactory.createRequestUrl(query);
 
-            String url = RequestUrlFactory.createRequestUrl(query);
-            new ImagesAsyncTask().execute(url);
+                new ImagesAsyncTask().execute(url);
+
+            }
+
+            selectImagesTab();
+        }
+    };
+
+
+    //Listener to load more data when user reaches the end of the list
+    private GridView.OnScrollListener overScrollListener = new AbsListView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+            if (scrollState == SCROLL_STATE_IDLE) {
+                if (!flag_loading && view.getLastVisiblePosition() >= view.getCount() - 1) {
+                    String url = RequestUrlFactory.createRequestUrl(recentQuery, view.getCount());
+                    new ImagesAsyncTask().execute(url);
+                }
+            }
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
         }
     };
 
     //keeps track of local variable for most recent query
     private void addQueryWrapper(String query) {
-        SearchHistorySingleton.getInstance().addQuery(query); //in order to maintain the order
+//        SearchHistorySingleton.getInstance().addQuery(query); //in order to maintain the order
         recentQuery = query;
-        SearchHistorySingleton.getInstance().logHistory();
+        suggestions.saveRecentQuery(query, null);
+//        SearchHistorySingleton.getInstance().logHistory();
     }
 
 }
