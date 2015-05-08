@@ -16,8 +16,8 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 public class ImageAdapter extends ArrayAdapter<String> {
-    private Context context;
-    private List<String> imageUrls;
+    private final Context context;
+    private final List<String> imageUrls;
 
     public ImageAdapter(Context context, int resource, List<String> imageUrls) {
         super(context, resource, imageUrls);

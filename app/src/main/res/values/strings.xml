@@ -5,7 +5,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="no_results">No Images to Display! Search Again</string>
-    <string name="no_history">No Search History</string>
     <string name="image_tab_text">Images</string>
     <string name="history_tab_text">Search History</string>
     <string name="more_results_button_text">Load More Results</string>

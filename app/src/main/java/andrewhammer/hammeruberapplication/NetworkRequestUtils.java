@@ -15,12 +15,13 @@ import java.util.List;
  * Created by andrewhammer on 5/6/15.
  */
 public class NetworkRequestUtils {
-    private static final String refererHeader = "http://www.uber.com"; //placeholder referer URL for referer header in api request
+    private static final String REFERER_HEADER = "referer";
+    private static final String REFERER_SRC = "http://www.uber.com"; //placeholder referer URL for referer header in api request
 
     public static Response doConnectionRequest(String url, OkHttpClient client) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
-                .header("referer", refererHeader)
+                .header(REFERER_HEADER, REFERER_SRC)
                 .build();
 
         return client.newCall(request).execute();
@@ -29,9 +30,7 @@ public class NetworkRequestUtils {
     //parses the json result of the api call using gson
     //stores image urls into destinationList - java passes by reference
     public static void parseResult(String result, List<String> destinationList) {
-//        Log.d("MainActivity debug", "json " + result);
         JsonElement jsonResult = new JsonParser().parse(result);
-//        Log.d("MainActivity debug", "json " + jsonResult.toString());
 
         JsonObject jsObjResult = jsonResult.getAsJsonObject();
         JsonObject responseData = jsObjResult.getAsJsonObject("responseData");
@@ -42,7 +41,6 @@ public class NetworkRequestUtils {
         JsonArray responses = responseData.getAsJsonArray("results");
 
         if (responses.size() == 0) {
-//            Log.d("MainActivity debug", "no results in response");
             return;
         }
 
@@ -50,7 +48,6 @@ public class NetworkRequestUtils {
             JsonObject response = responses.get(i).getAsJsonObject();
             String url = response.get("tbUrl").getAsString();  //gets the thumbnail url
             destinationList.add(url);
-//            Log.d("MainActivity debug", "url " + i + url);
         }
     }
 

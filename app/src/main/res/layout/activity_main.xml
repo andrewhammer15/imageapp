@@ -4,61 +4,13 @@
     tools:context=".MainActivity"
     android:background="@color/layout_bg_black">
 
-        <!---
-            I removed the inner relative layout.  I could have also replaced it with a
-            LinearLayout to put the TextViews next to each other with equal weight and
-            eliminated the Space, but I wanted to minimize the number of nested layouts to ensure
-            high layout inflation speeds.  With one nested layout, there's not likely to be any
-            issues, but it doesn't hurt to avoid unnecessary nesting.
-         -->
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/image_tab_text"
-            android:id="@+id/image_grid_tab"
-            android:layout_alignParentTop="true"
-            android:textColor="@color/tab_text_color"
-            android:gravity="center"
-            android:textSize="15sp"
-            android:padding="12dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@+id/space"
-            android:layout_toLeftOf="@+id/space" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/history_tab_text"
-            android:id="@+id/history_tab"
-            android:layout_alignParentTop="true"
-            android:textColor="@color/tab_text_color"
-            android:gravity="center"
-            android:textSize="15sp"
-            android:padding="12dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_toRightOf="@+id/space"
-            android:layout_toEndOf="@+id/space" />
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/space"
-            android:layout_alignParentTop="true"
-            android:layout_alignBottom="@+id/history_tab" />
-
-
     <GridView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/gridView"
-        android:layout_below="@+id/space"
+        android:layout_alignParentTop="true"
         android:numColumns="auto_fit"
         android:gravity="center"
-
         android:layout_above="@+id/progressBar"
         android:background="@color/gridview_bg_black" />
 
