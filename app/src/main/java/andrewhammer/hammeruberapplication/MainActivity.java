@@ -42,12 +42,14 @@ public class MainActivity extends ActionBarActivity {
     //For adding extras to bundles
     private static final String KEY_IMAGE_URLS = "Image Url Key";
     private static final String KEY_GRIDVIEW_INDEX = "First visible image index";
+    private static final String KEY_RECENT_QUERY = "Recent Query Key";
 
     //save data on teardown
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putStringArrayList(KEY_IMAGE_URLS, (ArrayList<String>) imageUrls);
         outState.putInt(KEY_GRIDVIEW_INDEX, gridView.getFirstVisiblePosition());
+        outState.putString(KEY_RECENT_QUERY, recentQuery);
         super.onSaveInstanceState(outState);
     }
 
@@ -57,6 +59,8 @@ public class MainActivity extends ActionBarActivity {
         super.onRestoreInstanceState(savedInstanceState);
 
         //savedInstanceState is always non-null here
+
+        recentQuery = savedInstanceState.getString(KEY_RECENT_QUERY);
 
         // clears pre-existing imageUrls - this isn't needed but might be necessary in future implementations
         if (!imageUrls.isEmpty())
